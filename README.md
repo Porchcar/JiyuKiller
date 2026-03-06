@@ -1,36 +1,37 @@
-# JiyuKiller
+# JiyuKiller 极域终结者
 
-<!-- 可选：顶部徽章区域（推荐放核心信息，如版本、许可证、构建状态等） -->
-![Release](https://img.shields.io/badge/Release-v3.0.0-red)
+![Release](https://img.shields.io/badge/Release-v3.2.0-red)
 ![MIT](https://img.shields.io/badge/许可证-MIT-green)
 ![Build](https://img.shields.io/badge/构建-通过-brightgreen)
 
 
-## Introduce
+## Introduce 简介
+JiyuKiller.py 可帮助您脱离极域的控制!   
 JiyuKiller.py can help you break free from Jiyu's control!   
 
 
-## Quick Start
-### Environment
-<!-- 列出运行项目的基础环境，如系统、依赖版本等 -->
-- System：Windows 7+
-- Depend：Python 3.9+
+## Quick Start 快速开始
+### Environment 环境要求
+- System：Windows 7 and above
+- 系统：Windows 7及以上
+- Python Version：Python 3.9 and above
+- Python版本：3.9及以上
 
 
-### Install
-<!-- 提供简洁的安装命令或操作流程 -->
-#### 1. Download at Releases (Recommanded)
+### Install 安装
+#### 1. Download at Releases 在Releases下载(Recommanded 推荐)
 [Releases](https://github.com/Porchcar/JiyuKiller/releases)
-Click this button to download!
-#### 2. Clone this repository
+Click this button to download!    
+点击这个链接以切换至Release页面。
+#### 2. Clone this repository Clone这个仓库
 ```bash
 git clone https://github.com/Porchcar/JiyuKiller.git
 
 cd JiyuKiller
 
-python "JiyuKiller3.0.py"
+python "JiyuKiller.py"
 ```
 
-## 许可证
-<!-- 明确项目许可证类型 -->
+## License 许可证
+This project based on [MIT License](LICENSE) Opensource. Check more detail in LICENSE file.    
 本项目基于 [MIT 许可证](LICENSE) 开源，详情请查看 LICENSE 文件。
