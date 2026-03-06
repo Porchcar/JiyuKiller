@@ -376,7 +376,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
-"""
-Copyright© 2026.3.6 Porchcup
-"""
