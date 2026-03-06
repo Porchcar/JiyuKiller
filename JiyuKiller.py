@@ -1,3 +1,7 @@
+# ==========
+VERSION = 3.2
+# ==========
+
 from Jiyu_help2.log import *
 import os, threading
 import ctypes, subprocess
