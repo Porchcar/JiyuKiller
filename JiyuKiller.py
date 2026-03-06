@@ -1,50 +1,118 @@
-import sys
-from date import Date
-file = open("D:\\log.log","a",encoding="utf-8")
-sys.stderr = file
-sys.stdout = file
-date_class = Date()
-
-def print(prompt:str,*args):
-    prompt = str(prompt)
-    sys.stdout.write(date_class.getFormatTime()+" "+prompt)
-    for i in args:
-        sys.stdout.write(" "+str(i))
-    sys.stdout.write("\n")
-
+from Jiyu_help2.log import *
 import os, threading
 import ctypes, subprocess
 from tkinter import BooleanVar
-from argvParser import parse_arguments
-argv = sys.argv
-if(os.path.exists("JIYUCONFIG.config")): #阅读预配置命令行信息
+# from argvParser import parse_arguments
+# 改用：
+from argvParser2 import parse_arguments_by_colon
+from betterPrint import print2dArray_str
+from Jiyu_help2.defines import *
+from Jiyu_help2 import defines
+
+TARGET_LVL = 2 # 默认提权至System, 0-User, 1-Administer, 2-System
+SHOW_START_ALERT_IN_LOGFILE = 1
+
+if(SHOW_START_ALERT_IN_LOGFILE):
+    print("="*10+"RESTART: "+__file__+"="*10)
+
+original_argv = sys.argv.copy()
+
+args = parse_arguments_by_colon(original_argv,
+                                    ["--cmd-format","--target-permission-level"],
+                                    ["--disable-install","--always-install","--debug","--help","--ignore-config-arguments"],
+                                    {"-C":"--cmd-format","-D":"--disable-install","-A":"--always-install","-I":"--ignore-config-arguments","-T":"--target-permission-level","-H":"--help","-h":"--help","-?":"--help"})
+cmd_format:str = ""
+if(args["--target-permission-level"]):
+    print("Detected using --target-permission-level, Will set --ignore-config-arguments on")
+    args["--ignore-config-arguments"] = 1
+if(os.path.exists("JIYUCONFIG.config")) and (not args["--ignore-config-arguments"]): # 阅读预配置命令行信息
     print("Using CONFIG arguments (.\\JIYUCONFIG.config)")
     conf = open("JIYUCONFIG.config","r",encoding="utf-8")
-    argv = [argv[0]]+eval(conf.read())
+    sys.argv = sys.argv + eval(conf.read())
+    print("Now arguments:",str(sys.argv))
     conf.close()
-args = parse_arguments(sys.argv,[("--disable-install",0),("--always-install",0)],"list")
-print(args)
-if not ("--disable-install" in args):
-    print("install")
-    if "system" in os.popen("whoami").read() or ("--always-install" in args):
+else:
+    sys.argv = original_argv.copy()
+
+args = parse_arguments_by_colon(sys.argv,
+                                ["--cmd-format","--target-permission-level"],
+                                ["--disable-install","--always-install","--debug","--help","--ignore-config-arguments","--start-use-console","--start"],
+                                {"-C":"--cmd-format",
+                                 "-D":"--disable-install",
+                                 "-A":"--always-install",
+                                 "-I":"--ignore-config-arguments",
+                                 "-T":"--target-permission-level",
+                                 "-S":"--start",
+                                 "-H":"--help",
+                                 "-h":"--help",
+                                 "-?":"--help"})
+
+print("Processed Args:",str(args))
+
+if (args["--start-use-console"] and not args["--start"]) and (not args["--help"]):
+    exit(1)
+
+if args["--help"]:
+#     print("""""JiyuKiller3.1.py 帮助文档
+# --cmd-format 格式化文本 自定义在提取到System权限时Python的命令行，此功能似乎不适用于Exe打包后的程序。
+# --disable-install          """"")
+    doc = [["--cmd-format -C 格式化文本","自定义在提取到System权限时Python的命令行，此功能似乎不适用于Exe打包后的程序。"],
+                                                     ["--disable-install -D","禁用在管理员提权和System权限提权阶段的自动Pip安装/检测所需模块的功能。"],
+                                                     ["--always-install -A","永远在管理员提权和System权限提权阶段自动Pip安装/检测所需模块，这适用于提权阶段未自动安装所需模块的情况。"],
+                                                     ["--debug","在控制台/日志打印更多调试信息。"],
+                                                     ["--ignore-config-arguments -I","忽略预配置命令行信息（.config）"],
+                                                     ["--target-permission-level -T Level","指定程序运行前提取权限至什么等级。0-User, 1-Administer, 2-System"],
+                                                     ["--start-use-console","指定当控制台参数包含--start时才运行主程序，否侧返回代码1。这个参数最好被放在CONFIG文件内"],
+                                                     ["--start -S","如未搭配--start-use-console标志则什么也不会发生，否则启动主程序"],
+                                                     ["--help -H -h -?","显示此帮助文档。"]]
+    printToConsole("\nJiyuKiller3.1.py帮助文档\n\n"+print2dArray_str(sorted(doc, key=lambda x: x[0]),"     "))
+    exit(0)
+if args["--cmd-format"]:
+    cmd_format = args["--cmd-format"]
+    print("Get cmd format:",cmd_format)
+if not args["--disable-install"]:
+    print("Not Detected --disable-install. Will install/upgrade by use pip")
+    whoami = os.popen("whoami").read()
+    if "system" in whoami or args["--always-install"]:
+        print("Verified at PipInstall. Begin to check modules.")
         l = os.popen("pip list").read()
-        for i in ["ttkbootstrap","pywin32","psutil","pygetwindow","pywinauto","pyautogui","tkinter-tooltip"]:
+        for i in ["ttkbootstrap","pywin32","psutil","pygetwindow","pywinauto","pyautogui","tkinter-tooltip","wmi","GPUtil","py-cpuinfo"]:
             if(not i in l):
                 os.system("pip install %s -i https://pypi.tuna.tsinghua.edu.cn/simple"%i)
+    else:
+        print("System User Found:", str("system" in whoami), '"Always-install" arg found:',args["--always-install"])
+if args["--debug"]:
+    defines.LOG_TO_CONSOLE = 1
+if args["--target-permission-level"]:
+    TARGET_LVL = int(args["--target-permission-level"])
+
 import pyautogui
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 from tktooltip import ToolTip
 from PIL import Image, ImageTk
-from Jiyu_help.banbroadcast import *
-from Jiyu_help.suspend import suspendJiyu, resumeJiyu
-from Jiyu_help.udp import send_message, execute_command, send_shutdown, send_restart
-from Jiyu_help.defines import *
-from Jiyu_help.kill import taskkill,ntsd
-from Jiyu_help.taskmgr import open_taskmgr
-from Jiyu_help.nsudo import createProcess
-from Jiyu_help.unlock import *
+from Jiyu_help2.banbroadcast import *
+from Jiyu_help2.suspend import suspendJiyu, resumeJiyu
+from Jiyu_help2.udp import send_message, execute_command, send_shutdown, send_restart
+from Jiyu_help2.kill import taskkill,ntsd
+from Jiyu_help2.taskmgr import open_taskmgr
+from Jiyu_help2.nsudo import createProcess
+from Jiyu_help2.unlock import *
+from Jiyu_help2.power import *
+from Jiyu_help2.system import *
 from time import sleep
+
+def replaceFlags(originalString:str,flags:dict):
+    for i in flags.keys():
+        originalString = originalString.replace(i,flags[i])
+    return originalString
+
+def builtA_Win10Only_Button(button:ttk.Button):
+    button.config(state=("normal" if isWin10() else "disabled"))
+    if(not isWin10()):
+        ToolTip(button,msg="当前电脑不是Win10及以上系统或不支持Win10内核，无法使用此功能",delay=1.0)
+    return button
+
 
 class JiyuApp:
     def __init__(self, root, whoami):
@@ -76,8 +144,13 @@ class JiyuApp:
                 command=lambda: self.run(taskkill, JIYU_NAME)).pack(pady=8, fill=X, padx=30)
         ttk.Button(kill, text="NTSD-Win7 杀", bootstyle=WARNING,
                 command=lambda: self.run(ntsd, True)).pack(pady=8, fill=X, padx=30)
-        ttk.Button(kill, text="NTSD-Win10 杀", bootstyle=WARNING,
-                command=lambda: self.run(ntsd, False)).pack(pady=8, fill=X, padx=30)
+        # ntsd_win10kill = ttk.Button(kill, text="NTSD-Win10 杀", bootstyle=WARNING,state=("normal" if isWin10() else "disabled"),
+        #         command=lambda: self.run(ntsd, False))
+        # ntsd_win10kill.pack(pady=8, fill=X, padx=30)
+        # if(not isWin10()):
+        #     ToolTip(ntsd_win10kill,msg="当前电脑不是Win10及以上系统或不支持Win10内核，无法使用此功能",delay=1.0)
+        builtA_Win10Only_Button(ttk.Button(kill, text="NTSD-Win10 杀", bootstyle=WARNING,
+                 command=lambda: self.run(ntsd, False))).pack(pady=8, fill=X, padx=30)
         
         # ---- 2. 功能 ----
         functions = ttk.Frame(notebook)
@@ -99,9 +172,9 @@ class JiyuApp:
         btns["解禁运行框"].config(command=lambda: self.run(unlock_runbox))
 
         # ---------- ② 下方继续放 fill=X 按钮 ----------
-        ttk.Button(functions, text="启动置顶任务管理器 (Win10)",
+        builtA_Win10Only_Button(ttk.Button(functions, text="启动置顶任务管理器 (Win10)",
                 bootstyle=WARNING,
-                command=lambda: self.run(open_taskmgr, True)).pack(fill=X, padx=30, pady=8)
+                command=lambda: self.run(open_taskmgr, True))).pack(fill=X, padx=30, pady=8)
         ttk.Button(functions, text="窗口化广播", bootstyle=WARNING,
                    command=lambda: self.run(ban)).pack(pady=8, fill=X, padx=30)
 
@@ -125,12 +198,18 @@ class JiyuApp:
         notebook.add(remote, text="远程")
         self.build_remote(remote)
 
-        # systemCfg = ttk.Frame(notebook)
-        # notebook.add(systemCfg, text="系统")
-        # powerCfg = ttk.Frame(systemCfg)
-        # ttk.Button(powerCfg, text="关机", bootstyle=INFO).pack(side=LEFT, fill=X, expand=True, padx=2, pady=8)
-        # ttk.Button(powerCfg, text="关机", bootstyle=INFO).pack(side=LEFT, fill=X, expand=True, padx=2, pady=8)
-        # ttk.Button(powerCfg, text="关机", bootstyle=INFO).pack(side=LEFT, fill=X, expand=True, padx=2, pady=8)
+        systemCfg = ttk.Frame(notebook)
+        notebook.add(systemCfg, text="系统")
+        powerCfg = ttk.Labelframe(systemCfg,text="电源")
+        ttk.Button(powerCfg, text="关机", bootstyle=INFO, command=lambda: self.run(shutdown)).pack(side=LEFT, fill=X, expand=True, padx=2, pady=8)
+        ttk.Button(powerCfg, text="重启", bootstyle=INFO, command=lambda: self.run(reboot)).pack(side=LEFT, fill=X, expand=True, padx=2, pady=8)
+        ttk.Button(powerCfg, text="注销", bootstyle=INFO, command=lambda: self.run(logout)).pack(side=LEFT, fill=X, expand=True, padx=2, pady=8)
+        powerCfg.pack(fill=X, padx=30, pady=(0, 0))
+        safeModeCfg = ttk.Labelframe(systemCfg,text="安全模式")
+        ttk.Button(safeModeCfg, text="打开安全模式", bootstyle=WARNING, command=lambda: self.run(setSafeMode, 1, 0)).pack(side=LEFT, fill=X, expand=True, padx=2, pady=8)
+        ttk.Button(safeModeCfg, text="打开安全模式（网络）", bootstyle=WARNING, command=lambda: self.run(setSafeMode, 1, 1)).pack(side=LEFT, fill=X, expand=True, padx=2, pady=8)
+        ttk.Button(safeModeCfg, text="关闭", bootstyle=WARNING, command=lambda: self.run(setSafeMode, 0, 0)).pack(side=LEFT, fill=X, expand=True, padx=2, pady=8)
+        safeModeCfg.pack(fill=X, padx=30, pady=30)
 
         # ---- 4. 日志 ----
         log = ttk.Frame(notebook)
@@ -179,9 +258,10 @@ class JiyuApp:
         self.log_tx.insert(END, msg + "\n", tag)
         self.log_tx.configure(state=DISABLED)
         self.log_tx.see(END)
+        print(msg)
 
     def poll_status(self, whoami):
-        from Jiyu_help.suspend import get_process_pid
+        from Jiyu_help2.suspend import get_process_pid
         pids = get_process_pid(JIYU_NAME)
         txt, st = ("极域运行中", SUCCESS) if pids else ("极域未运行", DANGER)
         self.status.configure(text=txt+" "+whoami, bootstyle=st)
@@ -253,23 +333,36 @@ def elevate_to_admin():
     python_exe = sys.executable
     script = os.path.abspath(__file__)
     ctypes.windll.shell32.ShellExecuteW(
-        None, "runas", python_exe, f'"{script}" {" ".join(argv[1:])}', None, 1)
+        None, "runas", python_exe, f'"{script}" {" ".join(original_argv[1:])}', None, 1)
     sys.exit(0)         # 原进程退出
 
 def elevate_to_system():
     python_exe = sys.executable
     script = os.path.abspath(__file__)
-    print(sys.argv)
-    cmd = [python_exe]+argv
-    createProcess(" ".join(cmd),SYSTEM_TEMPLATE)
+    
+    if cmd_format:
+        cmd = replaceFlags(cmd_format,{
+            "%python%": f'"{python_exe}"',  # 直接用双引号
+            "%script%": f'"{script}"'
+        })
+    else:
+        # 关键：生成仅含双引号的命令（Windows标准）
+        cmd_parts = [
+            f'"{python_exe}"',          # Python路径用双引号
+            f'"{script}"',              # 脚本路径用双引号
+        ] + [f'"{arg}"' for arg in sys.argv[1:]]
+        cmd = " ".join(cmd_parts)
+    
+    print(f"提权到System，执行命令：{cmd}")
+    createProcess(cmd, SYSTEM_TEMPLATE)
     sys.exit(0)
 
 def main():
     lvl = current_level()
-    print(lvl)
-    if lvl == 0:                # 普通用户
+    print("Current Permission Level:", lvl)
+    if lvl == 0 and TARGET_LVL >= 1:                # 普通用户
         elevate_to_admin()
-    elif lvl == 1:              # 管理员
+    elif lvl == 1 and TARGET_LVL >= 2:              # 管理员
         elevate_to_system()
     else:                       # System/TrustedInstaller
         whoami = subprocess.check_output("whoami", shell=True).decode().strip()
@@ -280,3 +373,6 @@ def main():
 if __name__ == "__main__":
     main()
     
+"""
+Copyright© 2026.3.6 Porchcup
+"""
