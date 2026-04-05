@@ -73,6 +73,14 @@ cd JiyuKiller
 python JiyuKiller.py
 ```
 
+## 第三方依赖下载
+本项目需要使用以下工具的**已编译版本**，请**自行前往原仓库下载**：
+
+### NSudo
+- 用途：用于获取 System 权限
+- 下载地址：https://github.com/M2Team/NSudo/releases
+- 请下载NSudo 9.0 Preview 1 (9.0.2676.0)最新版，放入本项目\NSudo目录下
+
 ## 致谢
 本项目使用、参考或改编了以下来源的代码与资源，非常感谢：
 ### 借鉴了代码
@@ -81,7 +89,10 @@ python JiyuKiller.py
 ### 使用了代码
 - [吾爱破解lzh173 机房管理助手相关](https://www.52pojie.cn/thread-2072166-1-1.html)，直接复制使用，少量修改。
 
-再次感谢以上作者的开源！如果觉得本项目有用，请给他们Star支持吧！   
+### 使用了编译后的程序
+- [NSudo](https://github.com/M2TeamArchived/NSudo)
+
+再次感谢以上作者的开源！如果觉得本项目有用，**请给原仓库点亮 Star 支持作者！⭐**！   
 版权均归原仓库所属
 
 ## 代码声明
