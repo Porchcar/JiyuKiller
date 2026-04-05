@@ -1,9 +1,3 @@
-# 此文件为当前版本，也就是3.3
-
-# ==========
-VERSION = 3.3
-# ==========
-
 """
 新内容：
  - 为部分内容添加Tooltip
@@ -30,7 +24,7 @@ Beta	#6c5ce7	测试紫
 RELEASE_TYPE = "Standard"
 # RELEASE_COLOR = "#2c68b6"
 RELEASE_COLOR = "#2c6fc7"
-VERSION = "3.4"
+VERSION = "3.3"
 
 import sys, os
 from pathlib import Path
@@ -189,6 +183,7 @@ from Jiyu_help2.system_operation.power import *
 from Jiyu_help2.system import *
 from Jiyu_help2.CRMA import *
 import Jiyu_help2.IFEO as ifeo_tools
+import Jiyu_help2.driver_control.kill as killProcess
 from Jiyu_help2.uiaccess import *
 from easyMenu import Right_Click_Menu
 from ttkbootstrap.dialogs import Messagebox as messagebox
@@ -320,6 +315,11 @@ class JiyuApp:
         kill = ttk.Frame(notebook)
         notebook.add(kill, text="杀进程")
 
+        def __ensure_Zwkill(processName:str):
+            if askyesno("注意","此操作使用自研驱动强力杀进程。\n这是一个实验性功能。\n因驱动原因或操作不当导致电脑蓝屏或数据丢失等问题，与作者无关。\n是否继续？",icon="warning"):
+                for i in processName.split("|"):
+                    killProcess.kill_process(processName)
+
         killJiyu = ttk.Menubutton(kill, text="杀极域", bootstyle=DANGER)
         killJiyu.pack(pady=8, fill=X, padx=30)
 
@@ -329,7 +329,13 @@ class JiyuApp:
                                                             "NTSD-Win7",
                                                             lambda:self.run(ntsd, 1, JIYU_NAME)).addItem("",
                                                             "NTSD-Win10",
-                                                            lambda:self.run(ntsd, 0, JIYU_NAME), not isWin10()))
+                                                            lambda:self.run(ntsd, 0, JIYU_NAME), not isWin10()).addItem("",
+                                                            "NtTerminateProcess",
+                                                            lambda:self.run(nt, JIYU_NAME)).addItem("",
+                                                            "DebugActiveProcess",
+                                                            lambda:self.run(debug, JIYU_NAME)).addItem("",
+                                                            "ZwTerminateProcess驱动强杀（高危）",
+                                                            lambda:self.run(__ensure_Zwkill, JIYU_NAME)))
         
         killChuanqi = ttk.Menubutton(kill, text="杀传奇", bootstyle=WARNING)
         killChuanqi.pack(pady=8, fill=X, padx=30)
@@ -340,7 +346,13 @@ class JiyuApp:
                                                             "NTSD-Win7",
                                                             lambda:self.run(ntsd, 1, CHUANQI_NAME)).addItem("",
                                                             "NTSD-Win10",
-                                                            lambda:self.run(ntsd, 0, CHUANQI_NAME), not isWin10()))
+                                                            lambda:self.run(ntsd, 0, CHUANQI_NAME), not isWin10()).addItem("",
+                                                            "NtTerminateProcess",
+                                                            lambda:self.run(nt, CHUANQI_NAME)).addItem("",
+                                                            "DebugActiveProcess",
+                                                            lambda:self.run(debug, CHUANQI_NAME)).addItem("",
+                                                            "ZwTerminateProcess驱动强杀（高危）",
+                                                            lambda:self.run(__ensure_Zwkill, CHUANQI_NAME)))
         
         killRedSpider = ttk.Menubutton(kill, text="杀红蜘蛛", bootstyle=WARNING)
         killRedSpider.pack(pady=8, fill=X, padx=30)
@@ -351,7 +363,13 @@ class JiyuApp:
                                                             "NTSD-Win7",
                                                             lambda:self.run(ntsd, 1, REDSPIDER_NAME)).addItem("",
                                                             "NTSD-Win10",
-                                                            lambda:self.run(ntsd, 0, REDSPIDER_NAME), not isWin10()))
+                                                            lambda:self.run(ntsd, 0, REDSPIDER_NAME), not isWin10()).addItem("",
+                                                            "NtTerminateProcess",
+                                                            lambda:self.run(nt, REDSPIDER_NAME)).addItem("",
+                                                            "DebugActiveProcess",
+                                                            lambda:self.run(debug, REDSPIDER_NAME)).addItem("",
+                                                            "ZwTerminateProcess驱动强杀（高危）",
+                                                            lambda:self.run(__ensure_Zwkill, REDSPIDER_NAME)))
         
         killCRMA = ttk.Menubutton(kill, text="杀+卸载机房管理助手", bootstyle=WARNING)
         killCRMA.pack(pady=8, fill=X, padx=30)
@@ -362,7 +380,11 @@ class JiyuApp:
                                                             "NTSD-Win7",
                                                             lambda:self.run(kill_CRMA_ntsd, 1)).addItem("",
                                                             "NTSD-Win10",
-                                                            lambda:self.run(kill_CRMA_ntsd, 0), not isWin10()))
+                                                            lambda:self.run(kill_CRMA_ntsd, 0), not isWin10()).addItem("",
+                                                            "NtTerminateProcess",
+                                                            lambda:self.run(kill_CRMA_custom, nt, nt_kill)).addItem("",
+                                                            "DebugActiveProcess",
+                                                            lambda:self.run(kill_CRMA_custom, debug, debug_kill)))
         
         def __ensure_banCRMA():
             if askyesno("注意","此操作使用自研驱动强力屏蔽机房管理助手服务。\n这是一个实验性功能。\n因驱动原因或操作不当导致电脑蓝屏或数据丢失等问题，与作者无关。\n是否继续？",icon="warning"):
@@ -388,8 +410,19 @@ class JiyuApp:
                 func = taskkill
             elif method == 2:
                 func = lambda program:ntsd(1, program)
-            else:
+            elif method == 3:
                 func = lambda program:ntsd(0, program)
+            elif method == 4:
+                func = nt
+            elif method == 5:
+                func = debug
+            elif method == 6:
+                if askyesno("注意","此操作使用自研驱动强力杀进程。\n这是一个实验性功能。\n因驱动原因或操作不当导致电脑蓝屏或数据丢失等问题，与作者无关。\n是否继续？",icon="warning"):
+                    func = killProcess.kill_process
+                else:
+                    return
+            else:
+                return
             func(self.killCustom_variable.get())
 
         killCustom = ttk.Menubutton(killCustom_frame, text="杀指定程序", bootstyle=WARNING)
@@ -401,7 +434,13 @@ class JiyuApp:
                                                             "NTSD-Win7",
                                                             lambda:self.run(__kill_custom_program, 2)).addItem("",
                                                             "NTSD-Win10",
-                                                            lambda:self.run(__kill_custom_program, 3), not isWin10()))
+                                                            lambda:self.run(__kill_custom_program, 3), not isWin10()).addItem("",
+                                                            "NtTerminateProcess",
+                                                            lambda:self.run(__kill_custom_program, 4)).addItem("",
+                                                            "DebugActiveProcess",
+                                                            lambda:self.run(__kill_custom_program, 5)).addItem("",
+                                                            "ZwTerminateProcess驱动强杀（高危）",
+                                                            lambda:self.run(__kill_custom_program, 6)))
         
         killCustom_frame.pack(pady=8, fill=X, padx=30)
 
@@ -966,5 +1005,5 @@ if __name__ == "__main__":
     main()
     
 """
-Copyright© 2026.3.21 张泊桥
+Copyright© 2026.4.5 张泊桥
 """
