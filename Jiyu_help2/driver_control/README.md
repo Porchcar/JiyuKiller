@@ -5,7 +5,7 @@
 <br>
 内核级停止服务功能需加载 `PCHunterMini.sys`。    
 驱动源码已丢失，敬请谅解。    
-请您**到[Release](https://github.com/Porchcar/JiyuKiller/releases)页面**下载最新版本，并从`_internal`->`Jiyu_help2`->`driver_control`解压出`PCHunterMini.sys`。
+请您**到[Release](https://github.com/Porchcar/JiyuKiller/releases)页面**下载最新版本，并从`_internal`->`Jiyu_help2`->`driver_control`解压出`PCHunterMini.sys`，并将其放到当前文件夹下。
 
 ## 编译
 1. 安装 **Visual Studio 2022** + **Windows Driver Kit (WDK)**
