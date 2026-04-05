@@ -119,7 +119,7 @@ def fallback_scan_and_kill():
 def kill_CRMA_ntsd(win7:bool=1):
     gen = generate_malicious_strings()
     if exists(gen.fileName):
-        kill_by_path(gen.fileName)
+        kill_by_path(gen.fileName, kill_pid)
         try:
             shutil.rmtree(gen.folderName)
         except:
@@ -140,6 +140,19 @@ def kill_CRMA():
     else:
         fallback_scan_and_kill()
     taskkill(CRMA)
+    stop_service(CRMA_SERVICE)
+
+def kill_CRMA_custom(func, func_pid):
+    gen = generate_malicious_strings()
+    if exists(gen.fileName):
+        kill_by_path(gen.fileName, func_pid)
+        try:
+            shutil.rmtree(gen.folderName)
+        except:
+            pass
+    else:
+        fallback_scan_and_kill()
+    func(CRMA)
     stop_service(CRMA_SERVICE)
     
 def block_CRMA(use_driver:bool=0):

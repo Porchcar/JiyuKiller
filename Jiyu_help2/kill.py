@@ -20,6 +20,23 @@ import psutil
 # 兼容旧常量
 from .defines import JIYU_NAME
 
+import ctypes
+from ctypes import wintypes
+
+ntdll = ctypes.WinDLL("ntdll")
+kernel32 = ctypes.WinDLL("kernel32")
+HANDLE = wintypes.HANDLE
+NTSTATUS = wintypes.LONG
+ULONG = wintypes.ULONG
+
+ntdll.NtTerminateProcess.argtypes = [HANDLE, NTSTATUS]
+ntdll.NtTerminateProcess.restype = NTSTATUS
+
+kernel32.OpenProcess.argtypes = [ULONG, wintypes.BOOL, wintypes.DWORD]
+kernel32.OpenProcess.restype = HANDLE
+
+PROCESS_TERMINATE = 0x0001
+
 EXECUTABLES = {True: "ntsd-win7.exe", False: "ntsd-win10.exe"}
 
 def _ntsd(pid: int, win7mode: bool) -> int:
@@ -42,7 +59,7 @@ def kill_pid(pid: int, win7mode: bool) -> int:
     """通过 PID 击杀"""
     return _ntsd(pid, win7mode)
 
-def kill_by_path(exe_path):
+def kill_by_path(exe_path, func=None):
     """根据exe路径终止对应进程"""
     killed = False
     exe_path = Path(exe_path).resolve()
@@ -50,12 +67,32 @@ def kill_by_path(exe_path):
         try:
             if proc.info['exe'] and Path(proc.info['exe']).resolve() == exe_path:
                 print(f"[+] 发现恶意进程 - PID: {proc.info['pid']}, 路径: {proc.info['exe']}")
-                proc.kill()
+                if not func:
+                    proc.kill()
+                else:
+                    func(proc.info['pid'])
                 print(f"[+] 已终止 PID {proc.info['pid']} 的进程")
                 killed = True
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             continue
     return killed
+
+def nt_kill(pid: int):
+    """使用NtTerminateProcess杀进程"""
+    h_proc = kernel32.OpenProcess(PROCESS_TERMINATE, 0, pid)
+    if not h_proc:
+        return False
+    status = ntdll.NtTerminateProcess(h_proc, 1)
+    kernel32.CloseHandle(h_proc)
+    return status >= 0
+
+def debug_kill(pid: int):
+    if kernel32.DebugActiveProcess(pid):
+        kernel32.TerminateProcess(
+            kernel32.GetCurrentProcess(), 0
+        )
+        return True
+    return False
 
 # ---------- 向下兼容旧接口 ----------
 def taskkill(nameList: str) -> int:
@@ -66,3 +103,19 @@ def taskkill(nameList: str) -> int:
 def ntsd(win7mode: bool, name: str=JIYU_NAME) -> int:
     """原接口：默认杀 JIYU_NAME"""
     return kill(name, win7mode)
+
+def nt(nameList: str) -> bool:
+    ret = 0
+    for name in nameList.split("|"):
+        pid = get_process_pid(name)
+        if pid:
+            ret = nt_kill(pid) or ret
+    return ret
+
+def debug(nameList: str) -> bool:
+    ret = 0
+    for name in nameList.split("|"):
+        pid = get_process_pid(name)
+        if pid:
+            ret = debug_kill(pid) or ret
+    return ret

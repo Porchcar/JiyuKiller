@@ -56,7 +56,12 @@ RUN_NAME = "NoRun"   # 1=隐藏/禁用  0=显示(删除键)
 BROADCAST_BUTTON = "AfxWnd80u"
 
 # Log.py
-LOG_FILE_LOCATION = "D:\\log.log"
+import os, time
+program_data = os.environ.get("ProgramData", "C:\\ProgramData")
+log_dir = os.path.join(program_data, "JiyuKiller", "log")
+os.makedirs(log_dir, exist_ok=True)
+LOG_FILE_LOCATION = os.path.join(log_dir, f"killer_{time.strftime('%Y%m%d')}.log")
+del os,time
 DEFINE_PRINT_AS_INFOFUNC = 1
 
 # Power.py
