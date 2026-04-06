@@ -59,7 +59,10 @@ from betterPrint import print2dArray_str
 from Jiyu_help2.defines import *
 from Jiyu_help2 import defines
 
-TARGET_LVL = 3 # 默认提权至System, 0-User, 1-Administer, 2-System
+if PACKED:
+    TARGET_LVL = 3 # 默认提权至System, 0-User, 1-Administer, 2-System, 3-UIAccess
+else:
+    TARGET_LVL = 2
 SHOW_START_ALERT_IN_LOGFILE = 1
 
 if(SHOW_START_ALERT_IN_LOGFILE):
@@ -973,6 +976,8 @@ def main():
     if args["--no-permissions"]:
         print("已禁止程序提权（--no-permissions）")
         whoami = subprocess.check_output("whoami", shell=True).decode().strip()
+        if is_uiaccess():
+            whoami += " UIAccess"
         root = ttk.Window()
         JiyuApp(root, whoami)
         root.mainloop()
@@ -1005,5 +1010,5 @@ if __name__ == "__main__":
     main()
     
 """
-Copyright© 2026.4.5 张泊桥
+Copyright© 2026.4.6 张泊桥
 """
