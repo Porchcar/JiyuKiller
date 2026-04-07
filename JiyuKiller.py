@@ -280,6 +280,9 @@ class JiyuApp:
         self.easyclose_complete = False
         if not askyesno("确认用户协议","这个程序用于理解极域电子教室、传奇电子教室等安全机制。\n该工具展示了可能被恶意利用的漏洞。请负责任地使用，且仅在受控环境中使用。\n\n该工具仅供教育和研究目的使用。\n我们不对该工具被用于恶意活动承担任何责任。\n我们与任何使用该代码进行商业活动的公司没有任何关联。\n\n同意用户协议并进入程序，点击“是”按钮。",icon="info",default="no"):
             sys.exit(0)
+        
+        level = current_level()
+        showinfo("提示", f"启用 UIAccess超级置顶 功能失败，这可能由于多种原因。\n如果下列检测项均为正常，请与作者反馈并上传Log。\n\n打包为exe：{'是' if PACKED else '否（异常）'}\n权限：{level if level==2 else str(level)+'（异常）'}", icon="warning")
         if args["--no-logging-file"]:
             print("Running main program...")
             self.build_ui()
