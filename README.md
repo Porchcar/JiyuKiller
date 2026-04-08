@@ -81,6 +81,11 @@ python JiyuKiller.py
 - 下载地址：https://github.com/M2Team/NSudo/releases
 - 请下载NSudo 9.0 Preview 1 (9.0.2676.0)最新版，放入本项目\NSudo目录下
 
+### uiaccess.dll
+- 用途：用于获取 UIAccess 权限
+- 下载地址：https://github.com/shc0743/RunUIAccess/releases
+- 放入本项目\Jiyu_help2目录下
+
 ## 致谢
 本项目使用、参考或改编了以下来源的代码与资源，非常感谢：
 ### 借鉴了代码
