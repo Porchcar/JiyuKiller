@@ -1,14 +1,24 @@
+<div align="center">
+
+<img src="Mythware.ico" alt="JiyuKiller" width="15%">
+
 # JiyuKiller 极域终结者
+
+---
 
 ![Version](https://img.shields.io/github/v/release/Porchcar/JiyuKiller?style=flat-square)
 ![License](https://img.shields.io/github/license/Porchcar/JiyuKiller?style=flat-square)
 ![Language](https://img.shields.io/github/languages/top/Porchcar/JiyuKiller?style=flat-square)
 ![Build](https://img.shields.io/badge/build-passing-brightgreen?style=flat-square)
 
+</div>
+
 ## 简介
+---
 JiyuKiller 可帮助你脱离极域及其他课堂管理软件的控制，恢复系统正常使用权限。
 
 ## 亮点
+---
 - 使用UIAccess超级置顶窗口，可盖过**置顶任务管理器**/**Win+Tab** \(感谢[shc0723](https://github.com/shc0743/RunUIAccess)和[killtimer0](https://github.com/killtimer0/uiaccess)提供的思路\)\(此功能仅在打包后可用\)
 - 提供Taskkill、NTSD杀进程方法，同时多管齐下，有效应对多进程互相守护的情况
 - 具有简单的映像劫持功能，一键禁用指定程序
@@ -16,6 +26,7 @@ JiyuKiller 可帮助你脱离极域及其他课堂管理软件的控制，恢复
 - 自动挂起管理软件
 
 ## 完整功能列表
+---
 <details>
   <summary>点击这里展开/收起</summary>
 
@@ -34,10 +45,12 @@ JiyuKiller 可帮助你脱离极域及其他课堂管理软件的控制，恢复
 </details>
 
 ## 环境要求
+---
 - 系统：Windows 10 及以上 \(Windows 7 敬请期待\)
 - Python 版本：3.9 及以上
 
 ## 依赖库
+---
 <details>
   <summary>自定义库（在仓库根目录），欢迎单独使用</summary>
 
@@ -63,6 +76,7 @@ JiyuKiller 可帮助你脱离极域及其他课堂管理软件的控制，恢复
 </details>
 
 ## 快速开始
+---
 ### 1. 从 Releases 下载（推荐）
 [前往 Releases 下载最新版](https://github.com/Porchcar/JiyuKiller/releases)
 
@@ -74,6 +88,7 @@ python JiyuKiller.py
 ```
 
 ## 第三方依赖下载
+---
 本项目需要使用以下工具的**已编译版本**，请**自行前往原仓库下载**：
 
 ### NSudo
@@ -87,6 +102,7 @@ python JiyuKiller.py
 - 放入本项目\Jiyu_help2目录下
 
 ## 致谢
+---
 本项目使用、参考或改编了以下来源的代码与资源，非常感谢：
 ### 借鉴了代码
 - [shc0723](https://github.com/shc0743/RunUIAccess)和[killtimer0](https://github.com/killtimer0/uiaccess)，删改部分代码并翻译为python。
@@ -101,4 +117,5 @@ python JiyuKiller.py
 版权均归原仓库所属
 
 ## 代码声明
+---
 本项目**部分代码由人工智能（AI）辅助生成**，并经过人工审核、修改与适配后使用。
