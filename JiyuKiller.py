@@ -1017,7 +1017,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
-"""
-Copyright© 2026.4.6 张泊桥
-"""
