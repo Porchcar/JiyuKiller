@@ -1,15 +1,8 @@
 """
 新内容：
- - 为部分内容添加Tooltip
- - 添加Utilman-cmd互换功能
- - 添加解禁网络功能
- - 添加禁用程序功能
- - 构想了冰点还原的破冰和去密码
+ - 极域的函数注入(含截图、重定向函数)
 接下来：
- - 添加帮助文档                                                                         驳回
- - 添加针对机房管理助手的一键操作（杀进程+映像劫持+卸载）                                   ✅
- - 完善对于冰点还原的系列功能
- - 添加解禁u盘✅、解禁surf解禁小恐龙✅、自动删除常用应用禁用（驳回）、解驱动级键盘锁等功能✅    
+
 """
 
 """
@@ -21,10 +14,10 @@ Preview	#C99158	预告橙
 Beta	#6c5ce7	测试紫
 """
 
-RELEASE_TYPE = "Standard"
+RELEASE_TYPE = "Preview"
 # RELEASE_COLOR = "#2c68b6"
-RELEASE_COLOR = "#2c6fc7"
-VERSION = "3.3.1"
+RELEASE_COLOR = "#C99158"
+VERSION = "3.3.2"
 
 import sys, os
 from pathlib import Path
@@ -171,6 +164,7 @@ if args["--target-permission-level"]:
     TARGET_LVL = int(args["--target-permission-level"])
 
 import pyautogui
+import tkinter as tk
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 from tktooltip import ToolTip
@@ -188,6 +182,8 @@ from Jiyu_help2.CRMA import *
 import Jiyu_help2.IFEO as ifeo_tools
 import Jiyu_help2.driver_control.kill as killProcess
 from Jiyu_help2.uiaccess import *
+import Jiyu_help2.fakescreenshot as inject
+from Jiyu_help2.damageJiyu import *
 from easyMenu import Right_Click_Menu
 from ttkbootstrap.dialogs import Messagebox as messagebox
 from ttkbootstrap.dialogs import Querybox as simpledialog
@@ -262,6 +258,8 @@ def get_work_dir():
 
 class JiyuApp:
     def __init__(self, root, whoami):
+        self.JIYU_PID = -1
+
         self.root = root
         final_title = ""
         if str(args["--no-random"]) in ("1","3"):
@@ -275,10 +273,13 @@ class JiyuApp:
             self.rename_exe() 
         if exists(os.path.join(get_work_dir(),"Mythware.ico")):
             self.root.iconbitmap(os.path.join(get_work_dir(),"Mythware.ico"))
-        self.root.geometry("900x650")
+        self.root.geometry("900x810")
         self.hwnd = None
         self.easyclose_complete = False
         if not askyesno("确认用户协议","这个程序用于理解极域电子教室、传奇电子教室等安全机制。\n该工具展示了可能被恶意利用的漏洞。请负责任地使用，且仅在受控环境中使用。\n\n该工具仅供教育和研究目的使用。\n我们不对该工具被用于恶意活动承担任何责任。\n我们与任何使用该代码进行商业活动的公司没有任何关联。\n\n同意用户协议并进入程序，点击“是”按钮。",icon="info",default="no"):
+            sys.exit(0)
+
+        if not askyesno("注意","此版本包含未经测试的实验性功能。\n如操作不当，这将导致软件运行异常。\n是否继续？",icon="warning",default="no"):
             sys.exit(0)
         
         if not is_uiaccess():
@@ -503,6 +504,17 @@ class JiyuApp:
                    command=lambda: self.run(revert_changes_of_utilman)).pack(side=LEFT, fill=X, expand=True, padx=2, pady=8)
         utilman_n_cmd.pack(fill=X, padx=30, pady=8)
 
+        damageJiyu = ttk.Labelframe(functions, text="屏蔽极域")
+        damageJiyu_label = ttk.Label(damageJiyu, text="这是一个实验性功能，请积极提交Issue，谢谢！", font=("微软雅黑", 8, "bold"), bootstyle=DANGER, cursor="hand2")
+        damageJiyu_label.pack(pady=8, fill=X, padx=2)
+        damageJiyu_label.bind("<Button-1>", lambda event:self.run(webbrowser.open, "https://github.com/Porchcar/JiyuKiller/issues"))
+
+        ttk.Button(damageJiyu, text="屏蔽极域核心函数", bootstyle=WARNING,
+                   command=lambda: self.run(inject_dll, self.JIYU_PID)).pack(side=LEFT, fill=X, expand=True, padx=2, pady=8)
+        ttk.Button(damageJiyu, text="取消屏蔽", bootstyle=WARNING,
+                   command=lambda: self.run(RestoreFromBackup)).pack(side=LEFT, fill=X, expand=True, padx=2, pady=8)
+        damageJiyu.pack(fill=X, padx=30, pady=8)
+
         # ③ 还可以继续堆……
         self.bottom_broadcast = BooleanVar()
         smaller_broadcast = ttk.Checkbutton(functions, text="循环缩小屏幕广播", bootstyle=WARNING, variable=self.bottom_broadcast)
@@ -636,6 +648,114 @@ class JiyuApp:
                                                             lambda:self.run(webbrowser.open, "poki.cn")))
         
         ttk.Button(shortcut, text="在线Minecraft", command=lambda:self.run(webbrowser.open, "mcjs.cc"), bootstyle=WARNING).pack(pady=8, fill=X, padx=30)
+
+        # ---- 7. 伪装截图 ----
+
+        def get_all_window_titles():
+            titles = []
+            def callback(hwnd, lParam):
+                if user32.IsWindowVisible(hwnd):
+                    length = user32.GetWindowTextLengthW(hwnd)
+                    if length > 0:
+                        buf = ctypes.create_unicode_buffer(length + 1)
+                        user32.GetWindowTextW(hwnd, buf, length + 1)
+                        title = buf.value.strip()
+                        if title:
+                            titles.append(title)
+                return True
+            WND_PROC = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)
+            user32.EnumWindows(WND_PROC(callback), 0)
+            return sorted(list(set(titles)))
+        fakescreenshot = ttk.Frame(notebook)
+        notebook.add(fakescreenshot, text="伪装截图")
+
+        # 黑名单（全局变量）
+        blacklist = set()
+
+        # ======================
+        # 界面组件
+        # ======================
+        label_title = ttk.Label(fakescreenshot, text="截图隐藏控制", font=("微软雅黑", 12, "bold"))
+        label_title.pack(pady=6)
+        label_title = ttk.Label(fakescreenshot, text="这是一个实验性功能，请积极提交Issue，谢谢！", font=("微软雅黑", 8, "bold"), bootstyle=DANGER, cursor="hand2")
+        label_title.pack(pady=6)
+        label_title.bind("<Button-1>", lambda event:self.run(webbrowser.open, "https://github.com/Porchcar/JiyuKiller/issues"))
+        
+
+        # 按钮栏
+        btn_frame = ttk.Frame(fakescreenshot)
+        btn_frame.pack(fill=X, padx=10)
+
+        btn_refresh = ttk.Button(btn_frame, text="刷新窗口", command=lambda: refresh_windows())
+        btn_add = ttk.Button(btn_frame, text="在截图中隐藏这个窗口", command=lambda: add_black())
+        btn_remove = ttk.Button(btn_frame, text="在截图中显示这个窗口", command=lambda: remove_black())
+        btn_apply = ttk.Button(btn_frame, text="保存并生效", command=lambda: apply_all())
+
+        btn_refresh.pack(side=LEFT, padx=2)
+        btn_add.pack(side=LEFT, padx=2)
+        btn_remove.pack(side=LEFT, padx=2)
+        btn_apply.pack(side=LEFT, padx=2)
+
+        # 双列表布局
+        list_frame = ttk.Frame(fakescreenshot)
+        list_frame.pack(fill=BOTH, expand=1, padx=10, pady=6)
+
+        # 左：所有窗口
+        left_lab = ttk.Labelframe(list_frame, text="系统窗口列表")
+        left_lab.pack(side=LEFT, fill=BOTH, expand=1, padx=5)
+        list_all = tk.Listbox(left_lab, font=("微软雅黑", 10))
+        list_all.pack(fill=BOTH, expand=1, padx=4, pady=4)
+
+        # 右：黑名单
+        right_lab = ttk.Labelframe(list_frame, text="截图黑名单")
+        right_lab.pack(side=RIGHT, fill=BOTH, expand=1, padx=5)
+        list_black = tk.Listbox(right_lab, font=("微软雅黑", 10))
+        list_black.pack(fill=BOTH, expand=1, padx=4, pady=4)
+
+        # ======================
+        # 功能函数
+        # ======================
+        def refresh_windows():
+            list_all.delete(0, END)
+            for title in get_all_window_titles():
+                list_all.insert(END, title)
+
+        def refresh_blacklist():
+            list_black.delete(0, END)
+            for t in sorted(blacklist):
+                list_black.insert(END, t)
+
+        def add_black():
+            sel = list_all.curselection()
+            if sel:
+                title = list_all.get(sel[0])
+                blacklist.add(title)
+                refresh_blacklist()
+
+        def remove_black():
+            sel = list_black.curselection()
+            if sel:
+                title = list_black.get(sel[0])
+                blacklist.discard(title)
+                refresh_blacklist()
+
+        def apply_all():
+            try:
+                # 调用你的 inject.py
+                if self.JIYU_PID != -1:
+                    inject.inject_dll(self.JIYU_PID)
+                else:
+                    return
+                
+                # 传给DLL
+                final_title = "|".join(blacklist)
+                inject.call_dll(final_title)
+                showinfo("成功", f"已隐藏：{final_title}")
+            except Exception as e:
+                showinfo("错误", str(e), icon="error")
+
+        # 初始化刷新
+        refresh_windows()
 
         # ---- 7. 日志 ----
         log = ttk.Frame(notebook)
@@ -776,6 +896,7 @@ class JiyuApp:
     def poll_status(self, whoami):
         from Jiyu_help2.suspend import get_process_pid
         pids = get_process_pid(JIYU_NAME)
+        self.JIYU_PID = pids
         txt, st = ("极域运行中", SUCCESS) if pids else ("极域未运行", DANGER)
         self.status.configure(text=txt+" "+whoami, bootstyle=st)
         self.root.after(1000, lambda:self.poll_status(whoami))
