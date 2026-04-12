@@ -3,6 +3,10 @@ UIAccess超级置顶功能需加载 `uiaccess.dll` 文件。
 文件编译版在[shc0743](https://github.com/shc0743)的[Release版](https://github.com/shc0743/RunUIAccess/releases)中提供，请前往下载，别忘了点个Star⭐！
 下载后将其放置在本目录即可。
 
+NTSD强杀功能需加载 `ntsd-win7.exe` 和 `ntsd-win10.exe` 文件。    
+文件编译版在Microsoft官方网站的Windows调试工具(WDK)或本仓库[Release](https://github.com/Porchcar/JiyuKiller/releases)中提供，请前往下载。
+下载后将其放置在本目录即可。
+
 ---
 
 伪装截图功能需加载 `FakeScreenshot.dll` 文件。    
